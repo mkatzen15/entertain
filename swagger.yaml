@@ -1,0 +1,76 @@
+definitions:
+  Date:
+    properties:
+      start:
+        $ref: '#/definitions/StartData'
+      status:
+        $ref: '#/definitions/Status'
+      timezone:
+        type: string
+        x-go-name: Timezone
+    type: object
+    x-go-package: entertain/pkg/events
+  Event:
+    properties:
+      dates:
+        $ref: '#/definitions/Date'
+      name:
+        type: string
+        x-go-name: Name
+      url:
+        type: string
+        x-go-name: Url
+    type: object
+    x-go-package: entertain/pkg/events
+  EventList:
+    properties:
+      events:
+        items:
+          $ref: '#/definitions/Event'
+        type: array
+        x-go-name: Events
+    type: object
+    x-go-package: entertain/pkg/events
+  StartData:
+    properties:
+      dateTBD:
+        type: boolean
+        x-go-name: DateTBD
+      localDate:
+        type: string
+        x-go-name: LocalDate
+      noSpecificTime:
+        type: boolean
+        x-go-name: NoSpecificTime
+      timeTBA:
+        type: boolean
+        x-go-name: TimeTBA
+    type: object
+    x-go-package: entertain/pkg/events
+  Status:
+    properties:
+      code:
+        type: string
+        x-go-name: Code
+    type: object
+    x-go-package: entertain/pkg/events
+paths:
+  /events:
+    get:
+      description: Get all events
+      operationId: GetEvents
+      parameters:
+      - in: header
+        name: x-api-key
+        required: true
+        schema:
+          type: string
+        type: string
+      responses:
+        "200":
+          description: EventList
+          schema:
+            $ref: '#/definitions/EventList'
+      tags:
+      - Events
+swagger: "2.0"
