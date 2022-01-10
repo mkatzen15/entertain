@@ -16,9 +16,11 @@ func main() {
 	defer logger.Sync() // flushes buffer, if any
 
 	eventsHandler := handlers.NewEventsHandler(logger)
+	restaurantsHandler := handlers.NewRestaurantssHandler(logger)
 
 	// Routes including path and handler
 	r.HandleFunc("/events", eventsHandler.GetAllEvents).Methods(http.MethodGet)
+	r.HandleFunc("/restaurants", restaurantsHandler.GetRestaurants).Methods(http.MethodGet)
 
 	fmt.Println("Starting server at port 8080")
 

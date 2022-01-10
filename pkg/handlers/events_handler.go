@@ -62,11 +62,12 @@ type Embedded struct {
 }
 
 type Venue struct {
-	Name    string  `json:"name"`
-	Url     string  `json:"url"`
-	City    Name    `json:"city"`
-	State   Name    `json:"state"`
-	Address Address `json:"address"`
+	Name     string   `json:"name"`
+	Url      string   `json:"url"`
+	City     Name     `json:"city"`
+	State    Name     `json:"state"`
+	Address  Address  `json:"address"`
+	Location Location `json:"location"`
 }
 
 type Name struct {
@@ -75,6 +76,11 @@ type Name struct {
 
 type Address struct {
 	Line1 string `json:"line1"`
+}
+
+type Location struct {
+	Latitude  string `json:"latitude"`
+	Longitude string `json:"longitude"`
 }
 
 // GetAllEvents accepts a request and calls the Ticketmaster api to get all events
@@ -105,6 +111,9 @@ func (e *EventsHandler) GetAllEvents(w http.ResponseWriter, r *http.Request) {
 	resp, err := http.Get(fmt.Sprintf("%s?apikey=%s&city=%s", tmEventPath, apiKey, city))
 	if err != nil {
 		fmt.Println(err.Error())
+	} else if resp.StatusCode != http.StatusOK {
+		w.WriteHeader(resp.StatusCode)
+		return
 	}
 
 	defer resp.Body.Close()
