@@ -72,6 +72,7 @@ func main() {
 	r.HandleFunc("/events", eventsHandler.GetAllEvents).Methods(http.MethodGet)
 	r.HandleFunc("/restaurants", restaurantsHandler.GetRestaurants).Methods(http.MethodGet)
 	r.HandleFunc("/itinerary", itinerariesHandler.CreateItinerary).Methods(http.MethodPut)
+	r.HandleFunc("/itinerary", itinerariesHandler.GetItinerary).Methods(http.MethodGet)
 
 	fmt.Println("Starting server at port 8080")
 

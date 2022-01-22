@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 )
 
@@ -48,25 +51,6 @@ func (i *ItinerariesHandler) CreateItinerary(w http.ResponseWriter, r *http.Requ
 	ctx, _ := context.WithTimeout(context.Background(), 15*time.Second)
 
 	itinerary := Itinerary{}
-	// 	StartDate: "1-8-2022",
-	// 	DayPlans: []DayPlan{
-	// 		{
-	// 			Time: "12421",
-	// 			Location: EventLocation{
-	// 				Name: "test location",
-	// 				Url:  "google.com",
-	// 			},
-	// 		},
-	// 		{
-	// 			Time: "32532",
-	// 			Location: EventLocation{
-	// 				Name: "test location2",
-	// 				Url:  "google.com/2",
-	// 			},
-	// 		},
-	// 	},
-	// }
-	fmt.Println(r.Body)
 
 	// Decode the request body into the struct
 	// Return 400 if there's an error
@@ -78,15 +62,53 @@ func (i *ItinerariesHandler) CreateItinerary(w http.ResponseWriter, r *http.Requ
 	fmt.Println(itinerary)
 
 	//Perform InsertOne operation & validate against the error.
-	collection := i.mongoClient.Database(databaase).Collection(itineraryCollection)
-	_, err = collection.InsertOne(ctx, itinerary)
+	itineraryCollection := i.mongoClient.Database(databaase).Collection(itineraryCollection)
+	_, err = itineraryCollection.InsertOne(ctx, itinerary)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Println("Inserted doc to Mongo")
+	fmt.Println("Inserted itinerary to Mongo")
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+}
+
+// GetItinerary accepts a request and searches MongoDB for matching itineraries
+// Then returns the itineraries in order of startDate
+//
+// swagger:route GET /itinerary Itinerary GetItinerary
+// Create an itinerary
+//
+// parameters:
+// + in: header
+//   name: x-api-key
+//   type: string
+//   required: true
+// responses:
+//  200: Itineraries
+//  '401':
+//      description: Unauthorized request
+func (i *ItinerariesHandler) GetItinerary(w http.ResponseWriter, r *http.Request) {
+	ctx, _ := context.WithTimeout(context.Background(), 15*time.Second)
+
+	itineraryCollection := i.mongoClient.Database(databaase).Collection(itineraryCollection)
+
+	// Read documents from itinerary collection in Mongo and sort them so earliest start date is first
+	opts := options.Find()
+	opts.SetSort(bson.D{{"startDate", 1}})
+	sortCursor, err := itineraryCollection.Find(ctx, bson.D{}, opts)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var itinerariesSorted []bson.M
+	if err = sortCursor.All(ctx, &itinerariesSorted); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Retrieved itineraries from Mongo")
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(itinerariesSorted)
 }
